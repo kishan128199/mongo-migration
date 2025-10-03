@@ -1,0 +1,23 @@
+{
+  "name": "mongodb-schema-migrator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CLI scaffolding for incremental MongoDB collection schema migrations.",
+  "main": "src/cli.js",
+  "scripts": {
+    "migrate": "node ./src/cli.js",
+    "migrate:dry": "DRY_RUN=true node ./src/cli.js"
+  },
+  "keywords": [
+    "mongodb",
+    "migration",
+    "schema"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "mongodb": "^6.20.0",
+    "yargs": "^18.0.0"
+  }
+}
