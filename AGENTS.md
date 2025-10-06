@@ -1,37 +1,23 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/cli.js` is the CLI entry point that wires commands to the loaders and runner.
-- `src/config.js` centralizes environment parsing; keep configuration logic there.
-- `src/lib/` holds shared helpers (`logger`, `migrationLoader`, `migrationRunner`, `mongo`); add reusable services here.
-- `src/migrations/` contains ordered scripts such as `0001-sample-user-profile.js`; copy the template when adding files.
-- `templates/migration.js` provides the migration scaffold.
-- `.env` (copied from `.env.example`) stores connection secrets and must stay out of version control.
+The CLI entry point lives in `src/cli.js`, which wires configuration, logging, and migration execution. Runtime helpers sit under `src/lib/` (`logger.js`, `migrationLoader.js`, `migrationRunner.js`, `mongo.js`)—keep new utilities colocated there so the CLI stays slim. Configuration defaults are centralized in `src/config.js`. Active migration scripts reside in `src/migrations/` and follow the ordered pattern `NNNN-description.js`; copy `templates/migration.js` when creating a new step so shared logging and argument structure stay consistent.
 
 ## Build, Test, and Development Commands
-- `npm install` installs project dependencies.
-- `npm run migrate -- list` enumerates migrations using the current configuration.
-- `npm run migrate -- run <name>` executes a migration; pair with `--dry-run` to simulate writes.
-- `npm run migrate:dry -- run <name>` forces dry-run mode through environment variables.
-- `DEBUG=true npm run migrate -- run <name>` prints stack traces for easier debugging.
+- `npm install` – install dependencies before running the CLI.
+- `npm run migrate -- list` – enumerate migrations discovered in `src/migrations/`.
+- `npm run migrate -- run 0001-auth` – execute a migration with full writes enabled.
+- `npm run migrate:dry -- run 0001-auth` – force `DRY_RUN` mode for rehearsal runs regardless of `.env` settings.
+Set `.env` or `ENV_PATH` to point at connection credentials before invoking these commands.
 
 ## Coding Style & Naming Conventions
-- Target Node 18+, CommonJS modules, and 2-space indentation; keep multi-line literals trailing-comma friendly.
-- Use camelCase for symbols and kebab-case with numeric prefixes for migration filenames (`0002-new-schema.js`).
-- Keep migrations idempotent, log intent via the shared logger, and respect the injected `dryRun` guard.
-- Re-run `npm run migrate -- list` after renaming files to confirm the loader resolves them.
+Code is CommonJS, formatted with 2-space indentation, semicolons, and single-quoted strings. Prefer `const`/`let` over `var`, async/await over promise chains, and keep functions pure except for database work. When adding modules, export a single responsibility per file and surface named functions for easier test coverage. Migration files should export `{ id, description, up }` and keep log messages succinct (`logger.info('copying users batch')`).
 
 ## Testing Guidelines
-- Lean on dry runs plus Mongo shell queries to validate transformations before writes; capture evidence in PR notes.
-- Add automated checks beside the code (`src/lib/__tests__/migrationRunner.test.js`) using Jest or Node Test Runner when introduced.
-- Cover batching, failure paths, and configuration overrides; store fixtures under `test/fixtures` if needed.
+Automated tests are not yet present; rely on dry runs plus targeted MongoDB queries to validate transformations. Use `npm run migrate:dry` with representative data, inspect logs, and confirm document shapes in both source and target databases before enabling writes. If you add automated coverage, prefer lightweight integration tests that run migrations against seeded in-memory Mongo instances and document the setup in this guide.
 
 ## Commit & Pull Request Guidelines
-- Git history is not yet formalized, so adopt Conventional Commit subjects (`feat: cache migration loader`) for clarity.
-- Mention issue IDs, configuration changes, and representative CLI output in commit bodies or PR descriptions.
-- PRs should summarize intent, list validation commands, and include screenshots only when visual tooling is relevant.
+Write imperative, present-tense commit subjects under 60 characters (e.g., `Add migration runner batching`). Each commit should bundle related changes across code and docs. Pull requests must describe the migration intent, list verification steps (`npm run migrate:dry -- run <name>` outputs, Mongo shell spot checks), and note configuration updates. Include links to related tickets and mention any follow-up tasks. Avoid committing secrets; keep `.env` local.
 
 ## Configuration & Security Tips
-- Keep `.env` local; document required keys instead of committing secrets.
-- Prefer read-only source credentials for dry runs and rotate target credentials regularly.
-- Store ad-hoc secrets in your shell profile, not in scripts or migration files.
+Secrets load via `dotenv`; never check `.env` into git. Use `.env.example` as the canonical template and document new variables there. `DEBUG=true` enables full stack traces—only enable it locally. Confirm `BATCH_SIZE` and database names before production runs, and coordinate credential rotation with the infrastructure team because migrations may need prolonged connections.
