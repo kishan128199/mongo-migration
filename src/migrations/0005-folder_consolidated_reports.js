@@ -1,15 +1,17 @@
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require("mongodb");
 
 module.exports = {
   description:
-    'Copy folder_reports.consolidated_report payloads into consolidated_reports and link back references.',
+    "Copy folder_reports.consolidated_report payloads into consolidated_reports and link back references.",
 
   async up({ sourceDb, targetDb, batchSize, dryRun, logger }) {
-    const sourceFolderReports = sourceDb.collection('folder_reports');
-    const targetFolderReports = targetDb.collection('folder_reports');
-    const consolidatedCollection = targetDb.collection('consolidated_reports');
+    const sourceFolderReports = sourceDb.collection("folder_reports");
+    const targetFolderReports = targetDb.collection("folder_reports");
+    const consolidatedCollection = targetDb.collection("consolidated_reports");
 
-    logger.info('Starting folder_reports consolidated report linking migration');
+    logger.info(
+      "Starting folder_reports consolidated report linking migration"
+    );
 
     const cursor = sourceFolderReports
       .find({ consolidated_report: { $exists: true, $ne: null } })
@@ -29,7 +31,7 @@ module.exports = {
         continue;
       }
 
-      const folderReportId = ensureObjectId(folderReport._id);
+      const folderReportId = ensureObjectId(folderReport.folderId);
       if (!folderReportId) {
         logger.warn(
           `Skipping folder_report without usable _id when building consolidated report payload.`
@@ -101,7 +103,12 @@ module.exports = {
   },
 };
 
-function buildConsolidatedDoc({ payload, folderReport, folderReportId, consolidatedId }) {
+function buildConsolidatedDoc({
+  payload,
+  folderReport,
+  folderReportId,
+  consolidatedId,
+}) {
   const createdAt =
     normalizeDate(payload.createdAt) ||
     normalizeDate(folderReport.createdAt) ||
@@ -113,13 +120,13 @@ function buildConsolidatedDoc({ payload, folderReport, folderReportId, consolida
     createdAt;
 
   const reportPayload =
-    payload && typeof payload.report === 'object' && payload.report !== null
+    payload && typeof payload.report === "object" && payload.report !== null
       ? payload.report
       : payload;
 
   const doc = {
     _id: consolidatedId,
-    sourceType: 'folder',
+    sourceType: "folder",
     ConsolidatedReportOf: folderReportId,
     status: determineStatus(payload, folderReport),
     report: cloneValue(reportPayload),
@@ -133,7 +140,7 @@ function buildConsolidatedDoc({ payload, folderReport, folderReportId, consolida
 }
 
 function normalizePayload(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null;
   }
 
@@ -162,11 +169,11 @@ function determineStatus(payload, folderReport) {
 }
 
 function extractNumericStatus(value) {
-  if (typeof value === 'number' && Number.isFinite(value)) {
+  if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
 
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     const parsed = Number(value);
     if (Number.isFinite(parsed)) {
       return parsed;
@@ -198,11 +205,16 @@ function ensureObjectId(value) {
     return value;
   }
 
-  if (typeof value === 'string' && ObjectId.isValid(value)) {
+  if (typeof value === "string" && ObjectId.isValid(value)) {
     return new ObjectId(value);
   }
 
-  if (value && typeof value === 'object' && value.$oid && ObjectId.isValid(value.$oid)) {
+  if (
+    value &&
+    typeof value === "object" &&
+    value.$oid &&
+    ObjectId.isValid(value.$oid)
+  ) {
     return new ObjectId(value.$oid);
   }
 
@@ -210,7 +222,7 @@ function ensureObjectId(value) {
 }
 
 function removeUndefinedKeys(doc) {
-  if (!doc || typeof doc !== 'object') {
+  if (!doc || typeof doc !== "object") {
     return doc;
   }
 
@@ -222,14 +234,14 @@ function removeUndefinedKeys(doc) {
 
     if (Array.isArray(doc[key])) {
       doc[key] = doc[key]
-        .map((item) =>
-          typeof item === 'object' ? removeUndefinedKeys(item) || item : item
+        .map(item =>
+          typeof item === "object" ? removeUndefinedKeys(item) || item : item
         )
-        .filter((item) => item !== undefined);
+        .filter(item => item !== undefined);
       continue;
     }
 
-    if (doc[key] && typeof doc[key] === 'object') {
+    if (doc[key] && typeof doc[key] === "object") {
       removeUndefinedKeys(doc[key]);
     }
   }
@@ -254,7 +266,7 @@ function cloneValue(value) {
 }
 
 function isPlainObject(value) {
-  if (!value || typeof value !== 'object') {
+  if (!value || typeof value !== "object") {
     return false;
   }
 
@@ -264,14 +276,14 @@ function isPlainObject(value) {
 
 function describeId(value) {
   if (!value) {
-    return '<unknown>';
+    return "<unknown>";
   }
 
   if (value instanceof ObjectId) {
     return value.toHexString();
   }
 
-  if (value && typeof value === 'object' && value.$oid) {
+  if (value && typeof value === "object" && value.$oid) {
     return String(value.$oid);
   }
 
