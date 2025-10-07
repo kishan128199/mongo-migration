@@ -136,12 +136,17 @@ function buildSurveycineResponseDocument(feedbackResponse) {
         : feedbackResponse.deleted
     ),
     startProcessing: coerceBoolean(feedbackResponse.startProcessing),
-    allResponsesSubmitted: coerceBoolean(feedbackResponse.allResponsesSubmitted),
+    allResponsesSubmitted: coerceBoolean(
+      feedbackResponse.allResponsesSubmitted
+    ),
     createdAt: normalizeDate(feedbackResponse.createdAt),
     updatedAt: normalizeDate(feedbackResponse.updatedAt),
   };
 
-  if (feedbackResponse.recordId !== undefined && feedbackResponse.recordId !== null) {
+  if (
+    feedbackResponse.recordId !== undefined &&
+    feedbackResponse.recordId !== null
+  ) {
     doc.recordId =
       toObjectId(feedbackResponse.recordId) ?? feedbackResponse.recordId;
   }
@@ -222,9 +227,11 @@ function buildSurveycineReportDocument(feedbackResponse) {
   }
 
   const normalizedReport = cloneValue(report);
-  const createdAt = normalizeDate(report.createdAt) ||
+  const createdAt =
+    normalizeDate(report.createdAt) ||
     normalizeDate(feedbackResponse.createdAt);
-  const updatedAt = normalizeDate(report.updatedAt) ||
+  const updatedAt =
+    normalizeDate(report.updatedAt) ||
     normalizeDate(feedbackResponse.updatedAt) ||
     createdAt;
 
@@ -234,13 +241,9 @@ function buildSurveycineReportDocument(feedbackResponse) {
     reportOfType: "surveycine",
     report: normalizedReport,
     status:
-      report.status !== undefined
-        ? report.status
-        : feedbackResponse.status,
+      report.status !== undefined ? report.status : feedbackResponse.status,
     message:
-      report.message !== undefined
-        ? report.message
-        : feedbackResponse.message,
+      report.message !== undefined ? report.message : feedbackResponse.message,
     createdAt,
     updatedAt,
   };
@@ -333,12 +336,11 @@ function normalizeAudioSection(response) {
 }
 
 function normalizeSpeechToText(response) {
-  const speech =
-    isPlainObject(response.speech_to_text)
-      ? response.speech_to_text
-      : isPlainObject(response.speechToText)
-      ? response.speechToText
-      : null;
+  const speech = isPlainObject(response.speech_to_text)
+    ? response.speech_to_text
+    : isPlainObject(response.speechToText)
+    ? response.speechToText
+    : null;
 
   if (!speech) {
     return {};
@@ -406,8 +408,9 @@ function normalizeTrueValueScoreRaw(raw) {
 }
 
 function normalizeThumbnail(response) {
-  const thumbnail =
-    isPlainObject(response.thumbnail) ? response.thumbnail : null;
+  const thumbnail = isPlainObject(response.thumbnail)
+    ? response.thumbnail
+    : null;
   if (!thumbnail) {
     return {};
   }
@@ -416,7 +419,7 @@ function normalizeThumbnail(response) {
     status: thumbnail.status,
     message: thumbnail.message,
     data: pruneUndefined({
-      files: thumbnail.files,
+      ...thumbnail.files,
       processedAt: normalizeDate(thumbnail.processedAt),
     }),
   });
@@ -534,9 +537,7 @@ function isEmptyValue(value) {
 }
 
 function isPlainObject(value) {
-  return (
-    value !== null && typeof value === "object" && !Array.isArray(value)
-  );
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function cloneValue(value) {

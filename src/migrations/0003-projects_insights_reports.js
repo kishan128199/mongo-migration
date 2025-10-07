@@ -258,11 +258,7 @@ function buildInsightDoc(project, unitUsageIndex, logger) {
     "thumbnails",
   ]);
 
-  const transId = resolveTransIdForProject(
-    project,
-    unitUsageIndex,
-    logger
-  );
+  const transId = resolveTransIdForProject(project, unitUsageIndex, logger);
   if (transId) {
     insight.transId = transId;
   }
@@ -428,8 +424,7 @@ function buildAudio(project) {
   const audio = project.audio || {};
 
   const bucketUrl = project.audio_url || audio.url || audio.bucketUrl || null;
-  const sourceUrl =
-    audio.sourceUrl || audio.sourceFile || audio.file || null;
+  const sourceUrl = audio.sourceUrl || audio.sourceFile || audio.file || null;
 
   const data = pruneUndefined({
     bucketUrl,
@@ -563,7 +558,7 @@ function buildThumbnails(project) {
   }
 
   const data = pruneUndefined({
-    files: thumbnail.files || thumbnail.data,
+    ...(thumbnail.files || thumbnail.data),
     processedAt: ensureDate(thumbnail.processedAt),
   });
 

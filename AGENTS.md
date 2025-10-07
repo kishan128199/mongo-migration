@@ -1,34 +1,19 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/cli.js` exposes the migration CLI, reading runtime flags and delegating work to helpers in `src/lib/`.
-- `src/config.js` centralizes `.env` loading; adjust connection defaults there when introducing new environments.
-- Place executable migration scripts in `src/migrations/`, using zero-padded numeric prefixes plus a slug (e.g., `0007-user_profiles.js`) to preserve execution order.
-- `templates/migration.js` seeds new migrations; copy it when scaffolding additional steps.
+Core CLI lives in `src/cli.js`, handling flags and delegating to helpers in `src/lib/`. Shared utilities live there as well: `migrationLoader.js` for discovery, `migrationRunner.js` for orchestration, and `mongo.js` for connections. Runtime configuration sits in `src/config.js`. Place executable migrations in `src/migrations/` with zero-padded prefixes (e.g., `0007-user_profiles.js`) to preserve order. Use `templates/migration.js` as a starting point when adding steps, updating inline docs to match the scenario.
 
 ## Build, Test, and Development Commands
-- `npm install` — install dependencies after cloning or pulling.
-- `npm run migrate -- list` — print discoverable migrations using the configured directory.
-- `npm run migrate -- run <id>` — execute a specific migration; combine with `--dry-run` to simulate writes.
-- `npm run migrate:dry -- run <id>` — force dry-run mode via `DRY_RUN=true` for safety when testing.
-- Prefix commands with `DEBUG=true` to surface verbose stack traces during troubleshooting.
+Run `npm install` after cloning or pulling. Use `npm run migrate -- list` to inspect registered migrations. Execute one with `npm run migrate -- run <id>` and supply `--dry-run` to simulate writes. `npm run migrate:dry -- run <id>` forces dry-run mode via `DRY_RUN=true`. Prefix commands with `DEBUG=true` to emit verbose logs while diagnosing issues.
 
 ## Coding Style & Naming Conventions
-- Use modern Node 18+ features with CommonJS modules; exports remain `module.exports` for consistency.
-- Follow the existing two-space indentation, trailing commas on multi-line literals, and descriptive camelCase identifiers for variables and functions.
-- Prefer async/await inside migrations, reuse `logger.child()` for scoped logging, and keep migration files idempotent so they can be rerun.
+Target Node 18+ with CommonJS modules (`module.exports`). Keep two-space indentation, trailing commas on multi-line literals, and camelCase identifiers. Prefer async/await in migrations and scope logging with `logger.child({ migrationId })`. Ensure migrations are idempotent and guard against partial writes before toggling dry-run off.
 
 ## Testing Guidelines
-- No automated test runner ships with this scaffold; validate migrations via repeated dry runs against sampled data.
-- Log key counters (`processed`, `matchedCount`) and guard against partial writes before toggling out of dry-run mode.
-- Document any manual verification steps in the migration description to aid reviewers.
+No automated test harness ships with the repo. Instead, validate with repeated dry runs against representative data sets, logging counters like `processed`, `matchedCount`, and `modifiedCount`. Document any manual verification steps in the migration comments so reviewers can reproduce checks. Abort early if a write would occur while still in dry-run mode.
 
 ## Commit & Pull Request Guidelines
-- Follow Conventional Commits (`feat:`, `fix:`, `chore:`) as seen in history to clarify intent and aid changelog generation.
-- Keep commits focused on a single migration or helper change, including updated docs/templates alongside code.
-- PRs should explain the business goal, outline data validation performed, and link to related tickets; attach dry-run output snippets when available.
+Follow Conventional Commits (`feat:`, `fix:`, `chore:`). Keep commits focused on a single migration or helper change and include doc/template updates when relevant. Pull requests should explain the business goal, summarize dry-run results, link related tickets, and call out manual verification performed. Attach console excerpts when they clarify behavior.
 
-## Configuration & Security Notes
-- Never commit `.env` contents; rotate credentials if they are exposed outside secure channels.
-- Use `MIGRATIONS_DIR` overrides for experimental branches rather than editing production paths.
-- Share connection URIs through secret managers, and audit logs with `DEBUG=true` before promoting migrations to live environments.
+## Security & Configuration Tips
+Never commit `.env` values. Adjust connection defaults in `src/config.js` and pass secrets through environment variables or secret managers. Use `MIGRATIONS_DIR` overrides for experiments instead of editing production paths. Audit logs with `DEBUG=true` before promoting migrations to live environments, and rotate credentials if accidentally exposed.
