@@ -1,16 +1,16 @@
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require("mongodb");
 
 module.exports = {
   description:
-    'Copy feedback_questions.consolidated_report payloads into consolidated_reports and link back references.',
+    "Copy feedback_questions.consolidated_report payloads into consolidated_reports and link back references.",
 
   async up({ sourceDb, targetDb, batchSize, dryRun, logger }) {
-    const sourceQuestions = sourceDb.collection('feedback_questions');
-    const targetQuestions = targetDb.collection('feedback_questions');
-    const consolidatedCollection = targetDb.collection('consolidated_reports');
+    const sourceQuestions = sourceDb.collection("feedback_questions");
+    const targetQuestions = targetDb.collection("feedback_questions");
+    const consolidatedCollection = targetDb.collection("consolidated_reports");
 
     logger.info(
-      'Starting feedback_questions consolidated report linking migration'
+      "Starting feedback_questions consolidated report linking migration"
     );
 
     const cursor = sourceQuestions
@@ -34,7 +34,7 @@ module.exports = {
       const questionId = ensureObjectId(question._id);
       if (!questionId) {
         logger.warn(
-          'Skipping feedback_question without a usable _id when linking consolidated report payload.'
+          "Skipping feedback_question without a usable _id when linking consolidated report payload."
         );
         skipped += 1;
         continue;
@@ -69,13 +69,13 @@ module.exports = {
         logger.info(
           `Dry run - would set feedback_questions document ${describeId(
             questionId
-          )} ConsolidatedReportOf = ${describeId(consolidatedId)}`
+          )} consolidatedReportOf = ${describeId(consolidatedId)}`
         );
         questionLinks += 1;
       } else {
         const result = await targetQuestions.updateOne(
           { _id: questionId },
-          { $set: { ConsolidatedReportOf: consolidatedId } }
+          { $set: { consolidatedReportOf: consolidatedId } }
         );
 
         if (result.matchedCount === 0) {
@@ -105,17 +105,19 @@ module.exports = {
 function buildConsolidatedDoc({ payload, questionId, consolidatedId }) {
   const createdAt = normalizeDate(payload.createdAt) || new Date();
   const updatedAt =
-    normalizeDate(payload.updatedAt) || normalizeDate(payload.createdAt) || createdAt;
+    normalizeDate(payload.updatedAt) ||
+    normalizeDate(payload.createdAt) ||
+    createdAt;
 
   const reportPayload =
-    payload && typeof payload.report === 'object' && payload.report !== null
+    payload && typeof payload.report === "object" && payload.report !== null
       ? cloneValue(payload.report)
       : cloneValue(payload);
 
   const doc = {
     _id: consolidatedId,
-    sourceType: 'feedback_question',
-    ConsolidatedReportOf: questionId,
+    sourceType: "question",
+    consolidatedReportOf: questionId,
     status: extractNumericStatus(payload.status),
     report: reportPayload,
     consolidated_report: cloneValue(payload),
@@ -127,7 +129,7 @@ function buildConsolidatedDoc({ payload, questionId, consolidatedId }) {
 }
 
 function extractPayload(value) {
-  if (!value || typeof value !== 'object') {
+  if (!value || typeof value !== "object") {
     return null;
   }
 
@@ -135,11 +137,11 @@ function extractPayload(value) {
 }
 
 function extractNumericStatus(value) {
-  if (typeof value === 'number' && Number.isFinite(value)) {
+  if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
 
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     const parsed = Number(value);
     if (Number.isFinite(parsed)) {
       return parsed;
@@ -171,13 +173,13 @@ function ensureObjectId(value) {
     return value;
   }
 
-  if (typeof value === 'string' && ObjectId.isValid(value)) {
+  if (typeof value === "string" && ObjectId.isValid(value)) {
     return new ObjectId(value);
   }
 
   if (
     value &&
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value.$oid &&
     ObjectId.isValid(value.$oid)
   ) {
@@ -188,7 +190,7 @@ function ensureObjectId(value) {
 }
 
 function removeUndefinedKeys(doc) {
-  if (!doc || typeof doc !== 'object') {
+  if (!doc || typeof doc !== "object") {
     return doc;
   }
 
@@ -200,14 +202,14 @@ function removeUndefinedKeys(doc) {
 
     if (Array.isArray(doc[key])) {
       doc[key] = doc[key]
-        .map((item) =>
-          typeof item === 'object' ? removeUndefinedKeys(item) || item : item
+        .map(item =>
+          typeof item === "object" ? removeUndefinedKeys(item) || item : item
         )
-        .filter((item) => item !== undefined);
+        .filter(item => item !== undefined);
       continue;
     }
 
-    if (doc[key] && typeof doc[key] === 'object') {
+    if (doc[key] && typeof doc[key] === "object") {
       removeUndefinedKeys(doc[key]);
     }
   }
@@ -224,7 +226,7 @@ function cloneValue(value) {
     return new Date(value);
   }
 
-  if (value && typeof value === 'object') {
+  if (value && typeof value === "object") {
     const cloned = {};
     for (const [key, val] of Object.entries(value)) {
       cloned[key] = cloneValue(val);
@@ -237,14 +239,14 @@ function cloneValue(value) {
 
 function describeId(value) {
   if (!value) {
-    return '<unknown>';
+    return "<unknown>";
   }
 
   if (value instanceof ObjectId) {
     return value.toHexString();
   }
 
-  if (value && typeof value === 'object' && value.$oid) {
+  if (value && typeof value === "object" && value.$oid) {
     return String(value.$oid);
   }
 

@@ -70,13 +70,13 @@ module.exports = {
         logger.info(
           `Dry run - would set folder_reports document ${describeId(
             folderReportId
-          )} ConsolidatedReportOf = ${describeId(consolidatedId)}`
+          )} consolidatedReportOf = ${describeId(consolidatedId)}`
         );
         folderLinks += 1;
       } else {
         const result = await targetFolderReports.updateOne(
           { _id: folderReportId },
-          { $set: { ConsolidatedReportOf: consolidatedId } }
+          { $set: { consolidatedReportOf: consolidatedId } }
         );
 
         if (result.matchedCount === 0) {
@@ -127,7 +127,7 @@ function buildConsolidatedDoc({
   const doc = {
     _id: consolidatedId,
     sourceType: "folder",
-    ConsolidatedReportOf: folderReportId,
+    consolidatedReportOf: folderReportId,
     status: determineStatus(payload, folderReport),
     report: cloneValue(reportPayload),
     consolidated_report: cloneValue(payload),

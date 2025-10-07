@@ -123,7 +123,7 @@ function buildConsolidatedReportDocument(feedbackRequest) {
   const reportDoc = {
     _id: consolidatedId,
     sourceType: "surveycine",
-    ConsolidatedReportOf: consolidatedRef,
+    consolidatedReportOf: consolidatedRef,
     status: determineStatus(source, feedbackRequest),
     report: buildReport(reportPayload),
     createdAt,
