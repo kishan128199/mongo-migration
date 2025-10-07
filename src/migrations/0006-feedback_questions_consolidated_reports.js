@@ -120,7 +120,6 @@ function buildConsolidatedDoc({ payload, questionId, consolidatedId }) {
     consolidatedReportOf: questionId,
     status: extractNumericStatus(payload.status),
     report: reportPayload,
-    consolidated_report: cloneValue(payload),
     createdAt,
     updatedAt,
   };
